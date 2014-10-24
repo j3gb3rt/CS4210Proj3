@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
+<CodeBlocks_project_file>
+	<FileVersion major="1" minor="6" />
+	<Project>
+		<Option title="xmlrpc" />
+		<Option pch_mode="2" />
+		<Option compiler="gcc" />
+		<Build>
+			<Target title="Debug">
+				<Option output="bin/Debug/xmlrpc" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Debug/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-g" />
+				</Compiler>
+			</Target>
+			<Target title="Release">
+				<Option output="bin/Release/xmlrpc" prefix_auto="1" extension_auto="1" />
+				<Option object_output="obj/Release/" />
+				<Option type="1" />
+				<Option compiler="gcc" />
+				<Compiler>
+					<Add option="-O2" />
+				</Compiler>
+				<Linker>
+					<Add option="-s" />
+				</Linker>
+			</Target>
+		</Build>
+		<Compiler>
+			<Add option="-Wall" />
+		</Compiler>
+		<Unit filename="../../testProgram/client.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../testProgram/server.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../xmlrpc-c/src/Makefile" />
+		<Unit filename="../../xmlrpc-c/src/abyss_handler.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../xmlrpc-c/src/abyss_handler.h" />
+		<Unit filename="../../xmlrpc-c/src/base_global.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../xmlrpc-c/src/depend.mk" />
+		<Unit filename="../../xmlrpc-c/src/double.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../xmlrpc-c/src/double.h" />
+		<Unit filename="../../xmlrpc-c/src/json.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../xmlrpc-c/src/method.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../xmlrpc-c/src/method.h" />
+		<Unit filename="../../xmlrpc-c/src/parse_datetime.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../xmlrpc-c/src/parse_datetime.h" />
+		<Unit filename="../../xmlrpc-c/src/parse_value.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../xmlrpc-c/src/parse_value.h" />
+		<Unit filename="../../xmlrpc-c/src/registry.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../xmlrpc-c/src/registry.h" />
+		<Unit filename="../../xmlrpc-c/src/resource.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../xmlrpc-c/src/system_method.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../xmlrpc-c/src/system_method.h" />
+		<Unit filename="../../xmlrpc-c/src/trace.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../xmlrpc-c/src/version.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../xmlrpc-c/src/xmlrpc_array.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../xmlrpc-c/src/xmlrpc_authcookie.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../xmlrpc-c/src/xmlrpc_build.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../xmlrpc-c/src/xmlrpc_client.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../xmlrpc-c/src/xmlrpc_client_global.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../xmlrpc-c/src/xmlrpc_data.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../xmlrpc-c/src/xmlrpc_datetime.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../xmlrpc-c/src/xmlrpc_decompose.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../xmlrpc-c/src/xmlrpc_expat.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../xmlrpc-c/src/xmlrpc_libxml2.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../xmlrpc-c/src/xmlrpc_parse.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../xmlrpc-c/src/xmlrpc_serialize.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../xmlrpc-c/src/xmlrpc_server_abyss.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../xmlrpc-c/src/xmlrpc_server_cgi.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../xmlrpc-c/src/xmlrpc_server_info.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../xmlrpc-c/src/xmlrpc_server_w32httpsys.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../xmlrpc-c/src/xmlrpc_string.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Unit filename="../../xmlrpc-c/src/xmlrpc_struct.c">
+			<Option compilerVar="CC" />
+		</Unit>
+		<Extensions>
+			<code_completion />
+			<debugger />
+		</Extensions>
+	</Project>
+</CodeBlocks_project_file>
