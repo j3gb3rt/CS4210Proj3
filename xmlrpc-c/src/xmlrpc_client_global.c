@@ -1,4 +1,5 @@
 #include <stdarg.h>
+#include <string.h>
 
 #include "xmlrpc_config.h"
 
@@ -256,14 +257,20 @@ xmlrpc_client_call_server_asynch_params(
 }
 
 
-
-void 
-xmlrpc_client_call_asynch(const char * const serverUrl,
-                          const char * const methodName,
+//must enter number of servers, as well as a format string with the servers. Servers come first
+void
+xmlrpc_client_call_asynch(const char * const methodName,
                           xmlrpc_response_handler responseHandler,
                           void *       const userData,
                           const char * const format,
+			  int 	       const server_num,
                           ...) {
+
+    char *servers[server_num];
+
+    char arg_format[strlen(format)];
+    strcpy (arg_format, "(");
+    strcat (arg_format, format + 1 + server_num); //reforms format string
 
     xmlrpc_env env;
 
@@ -274,21 +281,31 @@ xmlrpc_client_call_asynch(const char * const serverUrl,
     if (!env.fault_occurred) {
         va_list args;
 
-        va_start(args, format);
+        va_start(args, server_num);
     
-        xmlrpc_client_start_rpcf_va(&env, globalClientP,
-                                    serverUrl, methodName,
+	int i;
+	for(i = 0; i < server_num; i++)
+	{
+
+		servers[i] = va_arg(args, char *);
+	}
+
+	for(i = 0; i < server_num; i++)
+	{
+        	xmlrpc_client_start_rpcf_va(&env, globalClientP,
+                                    servers[i], methodName,
                                     responseHandler, userData,
-                                    format, args);
+                                    arg_format, args);
+
+    		if (env.fault_occurred)
+       			(*responseHandler)(servers[i], methodName, NULL, userData, &env, NULL);
+
+		xmlrpc_env_clean(&env);
+	}
 
         va_end(args);
     }
-    if (env.fault_occurred)
-        (*responseHandler)(serverUrl, methodName, NULL, userData, &env, NULL);
-
-    xmlrpc_env_clean(&env);
 }
-
 
 
 void

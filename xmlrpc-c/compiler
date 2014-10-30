@@ -1,0 +1,7 @@
+#~/bin/bash
+clear
+
+make
+make install
+cd examples/
+make

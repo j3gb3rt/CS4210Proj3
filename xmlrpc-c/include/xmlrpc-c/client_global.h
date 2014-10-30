@@ -100,11 +100,11 @@ xmlrpc_client_transport_call(
 
 XMLRPC_CLIENT_EXPORTED
 void 
-xmlrpc_client_call_asynch(const char * const server_url,
-                          const char * const method_name,
+xmlrpc_client_call_asynch(const char * const method_name,
                           xmlrpc_response_handler responseHandler,
                           void *       const user_data,
                           const char * const format,
+			  int	       const server_num,
                           ...);
 
 XMLRPC_CLIENT_EXPORTED
