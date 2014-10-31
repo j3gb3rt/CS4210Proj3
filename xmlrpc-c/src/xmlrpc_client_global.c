@@ -138,7 +138,7 @@ typedef struct arg_struct
 		char *			 methodName;
 		char * 			 format;
 		xmlrpc_value **		 resultPP;
-		va_list			 args;
+		va_list *			 args;
 		pthread_mutex_t *	 counter_mutex;
 		int *			 counter;
 } arg_struct_t;
@@ -164,7 +164,7 @@ xmlrpc_value *
 xmlrpc_client_call(xmlrpc_env * const envP,
                    const char * const methodName,
                    const char * const format,
-		   int		const server_num,
+                   int const server_num,
                    ...) {
 
     xmlrpc_value * resultP;
@@ -200,7 +200,7 @@ xmlrpc_client_call(xmlrpc_env * const envP,
 	rpc_args->methodName = methodName;
 	rpc_args->format = arg_format;
 	rpc_args->resultPP = &resultP;
-	rpc_args->args = args;
+	rpc_args->args = &args;
 	rpc_args->counter_mutex = &counter_mutex;
 	rpc_args->counter = &return_counter;
 
@@ -208,7 +208,7 @@ xmlrpc_client_call(xmlrpc_env * const envP,
 	for(i = 0; i < server_num; i++)
 	{
 		rpc_args->serverUrl = servers[i];
-		pthread_create(&threads[i], NULL, synch_rpc_helper, (void *)rpc_args);
+		pthread_create(&threads[i], NULL, &synch_rpc_helper, (void *)rpc_args);
         /*	synch_rpc_helper(envP, globalClientP, servers[i],
                                 methodName, arg_format, &resultP, args,
 				&counter_mutex, &return_counter);
@@ -371,23 +371,12 @@ xmlrpc_client_call_asynch(const char * const methodName,
 
 	for(i = 0; i < server_num; i++)
 	{
-        	static void responseCheckerHandler (const char *   const serverUrl,
-                           const char *   const methodName,
-                           xmlrpc_value * const paramArrayP,
-                           void *         const user_data,
-                           xmlrpc_env *   const faultP,
-                           xmlrpc_value * const resultP)
-            {
-                //check for things
-                (*responseHandler)(servers[i], methodName, NULL, userData, &env, NULL);
-            }
-
 		//to prevent invoking of callback handler, make new function that calls
 		//	callback handler once all the servers have returned
 
         	xmlrpc_client_start_rpcf_va(&env, globalClientP,
                                     servers[i], methodName,
-                                    &responseCheckerHandler, userData,
+                                    responseHandler, userData,
                                     arg_format, args);
 
     		if (env.fault_occurred)

@@ -78,13 +78,13 @@ endif
 INCLUDES = -I. $(shell $(XMLRPC_C_CONFIG) client abyss-server --cflags)
 
 LIBS_CLIENT = \
-  $(shell $(XMLRPC_C_CONFIG) client --libs)
+  $(shell $(XMLRPC_C_CONFIG) client --libs) -pthread
 
 LIBS_SERVER_ABYSS = \
   $(shell $(XMLRPC_C_CONFIG) abyss-server --libs)
 
 LIBS_SERVER_CGI = \
-  $(shell $(XMLRPC_C_CONFIG) cgi-server --libs)
+  $(shell $(XMLRPC_C_CONFIG) cgi-server --libs) -pthread
 
 LIBS_BASE = \
   $(shell $(XMLRPC_C_CONFIG) --libs)
@@ -106,7 +106,7 @@ $(BLDDIR)/examples/cpp:
 $(CLIENTPROGS):%:%.o
 	$(CCLD) -o $@ $^ $(LIBS_CLIENT) $(LDFLAGS)
 
-$(SERVERPROGS_CGI):%.cgi:%_cgi.o
+$(SERVERPROGS_CGI):%.cgi:%_cgimissing.o
 	$(CCLD) -o $@ $^ $(LIBS_SERVER_CGI) $(LDFLAGS)
 
 $(SERVERPROGS_ABYSS):%:%.o

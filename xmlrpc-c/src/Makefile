@@ -227,6 +227,7 @@ $(LIBXMLRPC_CLIENT): LIBOBJECTS = \
 LIBXMLRPC_CLIENT_LIBDEP = \
   -Lblddir/src -Lblddir/lib/libutil \
   -lxmlrpc -lxmlrpc_util \
+  -pthread \
   $(XML_PARSER_LIBDEP) \
   $(TRANSPORT_LIBDEP) \
 
