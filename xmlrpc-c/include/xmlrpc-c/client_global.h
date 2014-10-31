@@ -54,9 +54,9 @@ xmlrpc_client_cleanup(void);
 XMLRPC_CLIENT_EXPORTED
 xmlrpc_value * 
 xmlrpc_client_call(xmlrpc_env * const envP,
-                   const char * const server_url,
                    const char * const method_name,
                    const char * const format,
+		   int		const server_num,
                    ...);
 
 XMLRPC_CLIENT_EXPORTED
