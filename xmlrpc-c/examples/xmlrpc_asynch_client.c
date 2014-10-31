@@ -73,6 +73,7 @@ main(int           const argc,
      const char ** const argv) {
 
     const char * const serverUrl = "http://localhost:8080/RPC2";
+    const char * const serverUrl2 = "http://localhost:8081/RPC2";
     const char * const methodName = "sample.add";
 
     xmlrpc_env env;
@@ -106,7 +107,7 @@ main(int           const argc,
      //                             handle_sample_add_response, NULL,
      //                            "(ii)", (xmlrpc_int32) 5, adder);
 	xmlrpc_client_call_asynch(methodName, handle_sample_add_response, 
-					NULL, "(sii)", 1, serverUrl, (xmlrpc_int32) 5, adder);
+					NULL, "(ssii)", 2, serverUrl, serverUrl2, (xmlrpc_int32) 5, adder);
         die_if_fault_occurred(&env);
     }
     

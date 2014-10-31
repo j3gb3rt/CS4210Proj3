@@ -1,6 +1,41 @@
-#~/bin/bash
+#!/bin/bash
 clear
 
+make clean
+rm lib/util/blddir
+rm lib/util/srcdir
+rm lib/libutil/blddir
+rm lib/libutll/srcdir
+rm lib/abyss/src/blddir
+rm lib/abyss/src/srcdir
+rm lib/curl_transport/blddir
+rm lib/curl_transport/srcdir
+rm lib/expat/xmlparse/srcdir
+rm lib/expat/xmltok/blddir
+rm lib/expat/xmltok/srcdir
+rm src/blddir
+rm src/srcdir
+rm src/cpp/blddir
+rm src/cpp/srcdir
+rm tools/lib/blddir
+rm tools/lib/srcdir
+rm tools/xmlrpc/blddir
+rm tools/xmlrpc/srcdir
+rm tools/xml/blddir
+rm tools/xml/srcdir
+rm tools/xml-rpc-api2cpp/blddir
+rm tools/xml-rpc-api2cpp/srcdir
+rm tools/xml-rpc-api2txt/blddir
+rm tools/xml-rpc-api2txt/srcdir
+rm tools/xmlrpc_cpp_proxy/blddir
+rm tools/xmlrpc_cpp_proxy/srcdir
+rm tools/xmlrpc_transport/blddir
+rm tools/xmlrpc_transport/srcdir
+rm test/blddir
+rm test/srcdir
+rm test/cpp/blddir
+rm test/cpp/srcdir
+sh configure --prefix=/usr/include
 make
 make install
 cd examples/

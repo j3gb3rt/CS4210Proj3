@@ -303,6 +303,8 @@ xmlrpc_client_call_asynch(const char * const methodName,
                 (*responseHandler)(servers[i], methodName, NULL, userData, &env, NULL);
             }
 
+		//to prevent invoking of callback handler, make new function that calls
+		//	callback handler once all the servers have returned
 
         	xmlrpc_client_start_rpcf_va(&env, globalClientP,
                                     servers[i], methodName,
@@ -312,9 +314,10 @@ xmlrpc_client_call_asynch(const char * const methodName,
     		if (env.fault_occurred)
        			(*responseHandler)(servers[i], methodName, NULL, userData, &env, NULL);
 
-		xmlrpc_env_clean(&env);
+
 	}
 
+	xmlrpc_env_clean(&env);
         va_end(args);
     }
 }

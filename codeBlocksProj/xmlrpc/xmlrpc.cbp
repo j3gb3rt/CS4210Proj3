@@ -37,6 +37,9 @@
 		<Unit filename="../../testProgram/server.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="../../testProgram/xmlrpc_asynch_client.c">
+			<Option compilerVar="CC" />
+		</Unit>
 		<Unit filename="../../xmlrpc-c/src/Makefile" />
 		<Unit filename="../../xmlrpc-c/src/abyss_handler.c">
 			<Option compilerVar="CC" />
