@@ -3,6 +3,7 @@
 #include <pthread.h>
 #include <stdio.h>
 #include <unistd.h>
+#include <stdlib.h>
 
 #include "xmlrpc_config.h"
 
@@ -150,7 +151,7 @@ synch_rpc_helper(void *args){
 
 	xmlrpc_client_call2f_va(arg_struct->envP, arg_struct->clientP, arg_struct->serverUrl,
 					 arg_struct->methodName, arg_struct->format,
-					 arg_struct->resultPP, arg_struct->args);
+					 arg_struct->resultPP, *arg_struct->args);
 
 
 	pthread_mutex_lock(arg_struct->counter_mutex);
@@ -162,14 +163,14 @@ synch_rpc_helper(void *args){
 //servers come before method args
 xmlrpc_value *
 xmlrpc_client_call(xmlrpc_env * const envP,
-                   const char * const methodName,
+                   char * const methodName,
                    const char * const format,
                    int const server_num,
                    ...) {
 
     xmlrpc_value * resultP;
     char *servers[server_num];
-    pthread_t *threads[server_num];
+    pthread_t threads[server_num];
 
     char arg_format[strlen(format)];
     strcpy (arg_format, "(");
@@ -182,9 +183,11 @@ xmlrpc_client_call(xmlrpc_env * const envP,
     int return_counter = 0;
     int threshold = server_num;
 
+    arg_struct_t *rpc_args = malloc(sizeof(arg_struct_t));
+
+
     if (!envP->fault_occurred) {
         va_list args;
-	arg_struct_t *rpc_args;
 
         va_start(args, server_num);
 
@@ -208,7 +211,7 @@ xmlrpc_client_call(xmlrpc_env * const envP,
 	for(i = 0; i < server_num; i++)
 	{
 		rpc_args->serverUrl = servers[i];
-		pthread_create(&threads[i], NULL, &synch_rpc_helper, (void *)rpc_args);
+		pthread_create(&threads[i], NULL, (void *)synch_rpc_helper, (void *)rpc_args);
         /*	synch_rpc_helper(envP, globalClientP, servers[i],
                                 methodName, arg_format, &resultP, args,
 				&counter_mutex, &return_counter);
@@ -223,6 +226,7 @@ xmlrpc_client_call(xmlrpc_env * const envP,
     }
 
     pthread_mutex_destroy(&counter_mutex);
+    free(rpc_args);
 
     return resultP;
 }

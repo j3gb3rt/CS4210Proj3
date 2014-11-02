@@ -32,12 +32,12 @@ BUILD_XMLRPC_PSTREAM  = no
 LSOCKET = 
 WININET_LDADD = 
 WININET_LIBDIR = 
-CURL_LDADD = -L/usr/lib/x86_64-linux-gnu -lcurl
+CURL_LDADD = -L/usr/lib/i386-linux-gnu -lcurl
 CURL_LIBDIR = /usr/lib
 LIBWWW_LDADD = 
 LIBWWW_LIBDIR = 
 FEATURE_LIST = c++ abyss-server curl-client 
-ABS_SRCDIR = /home/j3gb3rt/Documents/CS4210Proj3/xmlrpc-c
+ABS_SRCDIR = /home/chris/Dropbox/classes/adv_os_design/CS4210Proj3/xmlrpc-c
 PREFIX = /usr/include
 
 

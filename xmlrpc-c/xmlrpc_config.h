@@ -89,7 +89,7 @@
 #define HAVE_SYS_IOCTL_H 1
 #define HAVE_SYS_SELECT_H 1
 
-#define VA_LIST_IS_ARRAY 1
+#define VA_LIST_IS_ARRAY 0
 
 #define HAVE_LIBWWW_SSL 0
 
