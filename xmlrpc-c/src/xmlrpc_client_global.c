@@ -165,7 +165,8 @@ xmlrpc_value *
 xmlrpc_client_call(xmlrpc_env * const envP,
                    char * const methodName,
                    const char * const format,
-                   int const server_num,
+		   const int responses,
+                   const int server_num,
                    ...) {
 
     xmlrpc_value * resultP;
@@ -181,7 +182,19 @@ xmlrpc_client_call(xmlrpc_env * const envP,
     pthread_mutex_t counter_mutex;
     pthread_mutex_init(&counter_mutex, NULL);
     int return_counter = 0;
-    int threshold = server_num;
+
+    //set threshold
+    int threshold;
+    if(responses == 0)
+    {
+	threshold = 1;
+    }else if(responses == 1)
+    {
+	threshold = server_num/2 + 1;
+    }else
+    {
+	threshold = server_num;
+    }
 
     arg_struct_t *rpc_args = malloc(sizeof(arg_struct_t));
 
@@ -227,6 +240,7 @@ xmlrpc_client_call(xmlrpc_env * const envP,
 
     pthread_mutex_destroy(&counter_mutex);
     free(rpc_args);
+
 
     return resultP;
 }

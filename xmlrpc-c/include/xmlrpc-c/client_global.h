@@ -56,6 +56,7 @@ xmlrpc_value *
 xmlrpc_client_call(xmlrpc_env * const envP,
                    char * const method_name,
                    const char * const format,
+		   		   const int responses,
 		   		   int		const server_num,
                    ...);
 
