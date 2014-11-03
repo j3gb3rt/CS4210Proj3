@@ -1,9 +1,19 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes" ?>
 <CodeBlocks_layout_file>
 	<ActiveTarget name="Debug" />
-	<File name="../../../../../../usr/include/xmlrpc-c/client.h" open="0" top="0" tabpos="0" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="../../../../../../usr/include/xmlrpc-c/client.h" open="1" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="2107" topLine="54" />
+			<Cursor1 position="755" topLine="365" />
+		</Cursor>
+	</File>
+	<File name="../../xmlrpc-c/include/xmlrpc-c/client.h" open="1" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="2105" topLine="24" />
+		</Cursor>
+	</File>
+	<File name="../../xmlrpc-c/src/xmlrpc_client_global.c" open="1" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+		<Cursor>
+			<Cursor1 position="1592" topLine="7" />
 		</Cursor>
 	</File>
 	<File name="../../testProgram/xmlrpc_asynch_client.c" open="0" top="0" tabpos="5" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
@@ -11,24 +21,14 @@
 			<Cursor1 position="1002" topLine="14" />
 		</Cursor>
 	</File>
-	<File name="../../xmlrpc-c/include/xmlrpc-c/client.h" open="1" top="0" tabpos="2" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="2135" topLine="54" />
-		</Cursor>
-	</File>
 	<File name="../../xmlrpc-c/src/xmlrpc_client.c" open="1" top="1" tabpos="3" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="36570" topLine="1095" />
+			<Cursor1 position="827" topLine="0" />
 		</Cursor>
 	</File>
-	<File name="../../xmlrpc-c/src/xmlrpc_client_global.c" open="1" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
+	<File name="../../testProgram/client.c" open="1" top="0" tabpos="4" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
 		<Cursor>
-			<Cursor1 position="10561" topLine="363" />
-		</Cursor>
-	</File>
-	<File name="../../testProgram/client.c" open="0" top="0" tabpos="1" split="0" active="1" splitpos="0" zoom_1="0" zoom_2="0">
-		<Cursor>
-			<Cursor1 position="0" topLine="16" />
+			<Cursor1 position="97" topLine="0" />
 		</Cursor>
 	</File>
 </CodeBlocks_layout_file>

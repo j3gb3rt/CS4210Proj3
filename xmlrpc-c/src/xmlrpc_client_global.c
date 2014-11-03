@@ -165,7 +165,7 @@ xmlrpc_value *
 xmlrpc_client_call(xmlrpc_env * const envP,
                    char * const methodName,
                    const char * const format,
-		   const int responses,
+		   		   const int responses,
                    const int server_num,
                    ...) {
 
@@ -357,9 +357,10 @@ xmlrpc_client_call_server_asynch_params(
 //must enter number of servers, as well as a format string with the servers. Servers come first
 void
 xmlrpc_client_call_asynch(const char * const methodName,
-                          xmlrpc_multi_response_handler responseHandler,
+                          xmlrpc_response_handler responseHandler,
                           void *       const userData,
                           const char * const format,
+						  xmlrpc_multi_wait_type  wait_type,
 			  			  int  	       const server_num,
                           ...) {
 
@@ -368,7 +369,7 @@ xmlrpc_client_call_asynch(const char * const methodName,
     char arg_format[strlen(format)];
     strcpy (arg_format, "(");
     strcat (arg_format, format + 1 + server_num); //reforms format string
-
+	
     xmlrpc_env env;
 
     xmlrpc_env_init(&env);
@@ -380,31 +381,30 @@ xmlrpc_client_call_asynch(const char * const methodName,
 
         va_start(args, server_num);
 
-	int i;
-	for(i = 0; i < server_num; i++)
-	{
-
-		servers[i] = va_arg(args, char *);
-	}
-
+		int i;
+		for(i = 0; i < server_num; i++)
+		{
+			servers[i] = va_arg(args, char *);
+		}
+		const char * serverList[server_num] = servers;
 	//for(i = 0; i < server_num; i++)
 	//{
 		//to prevent invoking of callback handler, make new function that calls
 		//	callback handler once all the servers have returned
 
-        	xmlrpc_client_start_multi_rpcf_va(&env, globalClientP,
-                                    servers, methodName,
-									,ALL ,
-                                    ,responseHandler, userData,
+        xmlrpc_client_start_multi_rpcf_va(&env, globalClientP,
+                                    serverList, methodName,
+									wait_type , server_num,
+                                    responseHandler, userData,
                                     arg_format, args);
 
-    		if (env.fault_occurred)
-       			(*responseHandler)(servers, methodName, NULL, userData, &env, NULL);
+    	if (env.fault_occurred)
+       		(*responseHandler)(servers[0], methodName, NULL, userData, &env, NULL);
 
 
 	//}
 
-	xmlrpc_env_clean(&env);
+		xmlrpc_env_clean(&env);
         va_end(args);
     }
 }

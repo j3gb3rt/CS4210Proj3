@@ -51,13 +51,13 @@ xmlrpc_client_cleanup(void);
 **  xmlrpc_client_call
 **=======================================================================*/
 
-XMLRPC_CLIENT_EXPORTED
-xmlrpc_value * 
+XMLRPC_CLIENT_EXPORTED 
+xmlrpc_value *
 xmlrpc_client_call(xmlrpc_env * const envP,
-                   char * const method_name,
+                   char * const methodName,
                    const char * const format,
 		   		   const int responses,
-		   		   int		const server_num,
+                   const int server_num,
                    ...);
 
 XMLRPC_CLIENT_EXPORTED
@@ -100,12 +100,13 @@ xmlrpc_client_transport_call(
 */
 
 XMLRPC_CLIENT_EXPORTED
-void 
-xmlrpc_client_call_asynch(const char * const method_name,
+void
+xmlrpc_client_call_asynch(const char * const methodName,
                           xmlrpc_response_handler responseHandler,
-                          void *       const user_data,
+                          void *       const userData,
                           const char * const format,
-			  			  int	       const server_num,
+						  xmlrpc_multi_wait_type  wait_type,
+			  			  int  	       const server_num,
                           ...);
 
 XMLRPC_CLIENT_EXPORTED

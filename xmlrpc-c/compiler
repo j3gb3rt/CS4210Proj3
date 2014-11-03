@@ -5,7 +5,7 @@ make clean
 rm lib/util/blddir
 rm lib/util/srcdir
 rm lib/libutil/blddir
-rm lib/libutll/srcdir
+rm lib/libutil/srcdir
 rm lib/abyss/src/blddir
 rm lib/abyss/src/srcdir
 rm lib/curl_transport/blddir

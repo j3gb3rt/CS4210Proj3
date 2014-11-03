@@ -203,13 +203,6 @@ typedef void xmlrpc_response_handler(const char *   serverUrl,
                                      xmlrpc_env *   fault,
                                      xmlrpc_value * result);
 
-typedef void xmlrpc_multi_response_handler(const char *   serverUrl[],
-                                     const char *   methodName,
-                                     xmlrpc_value * paramArray,
-                                     void *         userHandle,
-                                     xmlrpc_env *   fault,
-                                     xmlrpc_value * result);
-
 
 /*=========================================================================
    xmlrpc_server_info
@@ -415,9 +408,10 @@ XMLRPC_CLIENT_EXPORTED
 void
 xmlrpc_client_start_multi_rpcf_va(xmlrpc_env *    const envP,
                             xmlrpc_client * const clientP,
-                            const char *    const serverUrls[],
+                            const char *  	const serverUrls[],
                             const char *    const methodName,
-                            xmlrpc_multi_wait_type numResponses,
+                            xmlrpc_multi_wait_type wait_type,
+							int 			const server_num,
                             xmlrpc_response_handler responseHandler,
                             void *          const userHandle,
                             const char *    const format,
