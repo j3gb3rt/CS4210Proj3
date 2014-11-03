@@ -30,7 +30,9 @@ CLIENTPROGS = \
   xmlrpc_sample_add_client \
   xmlrpc_asynch_client \
   xmlrpc_synch_add_client\
-  xmlrpc_synch2_add_client\
+  xmlrpc_synch2_any\
+  xmlrpc_synch2_majority\
+  xmlrpc_synch2_all\
 
 ifeq ($(MUST_BUILD_CURL_CLIENT),yes)
   ifneq ($(MSVCRT),yes)

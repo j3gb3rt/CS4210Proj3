@@ -38,6 +38,7 @@ main(int           const argc,
     xmlrpc_int32 sum;
     const char * const serverUrl = "http://localhost:8080/RPC2";
     const char * const serverUrl2 = "http://localhost:8081/RPC2";
+    const char * const serverUrl3 = "http://localhost:8082/RPC2";
     const char * const methodName = "sample.add";
 
     if (argc-1 > 0) {
@@ -57,7 +58,7 @@ main(int           const argc,
            "of 5 and 7...\n", serverUrl, methodName);
 
     /* Make the remote procedure call */
-    resultP = xmlrpc_client_call(&env, methodName, "(sii)", 0, 2, serverUrl, serverUrl2, 
+    resultP = xmlrpc_client_call(&env, methodName, "(sssii)", 1, 3, serverUrl, serverUrl2, serverUrl3, 
 				(xmlrpc_int32) 5, (xmlrpc_int32) 7);
     dieIfFaultOccurred(&env);
     
