@@ -35,8 +35,8 @@ rm test/blddir
 rm test/srcdir
 rm test/cpp/blddir
 rm test/cpp/srcdir
-sh configure --prefix=/usr/include
-make
-make install
-cd examples/
-make
+#sh configure --prefix=/usr/include
+#make
+#make install
+#cd examples/
+#make

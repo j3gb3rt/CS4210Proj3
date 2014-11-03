@@ -386,14 +386,14 @@ xmlrpc_client_call_asynch(const char * const methodName,
 		{
 			servers[i] = va_arg(args, char *);
 		}
-		const char * serverList[server_num] = servers;
+		
 	//for(i = 0; i < server_num; i++)
 	//{
 		//to prevent invoking of callback handler, make new function that calls
 		//	callback handler once all the servers have returned
 
         xmlrpc_client_start_multi_rpcf_va(&env, globalClientP,
-                                    serverList, methodName,
+                                    servers, methodName,
 									wait_type , server_num,
                                     responseHandler, userData,
                                     arg_format, args);

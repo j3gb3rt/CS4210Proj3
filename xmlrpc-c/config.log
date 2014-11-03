@@ -666,7 +666,7 @@ configure:5351: $? = 0
 configure:5351: result: yes
 configure:5351: checking for __strtoll
 configure:5351: gcc -o conftest -g -O2   conftest.c  >&5
-/tmp/ccHpWGOV.o: In function `main':
+/tmp/ccWMEnW9.o: In function `main':
 /home/j3gb3rt/Documents/CS4210Proj3/xmlrpc-c/conftest.c:67: undefined reference to `__strtoll'
 collect2: error: ld returned 1 exit status
 configure:5351: $? = 1
@@ -744,7 +744,7 @@ configure: failed program was:
 configure:5351: result: no
 configure:5351: checking for __strtoull
 configure:5351: gcc -o conftest -g -O2   conftest.c  >&5
-/tmp/ccnZlZq4.o: In function `main':
+/tmp/ccGVIpmi.o: In function `main':
 /home/j3gb3rt/Documents/CS4210Proj3/xmlrpc-c/conftest.c:67: undefined reference to `__strtoull'
 collect2: error: ld returned 1 exit status
 configure:5351: $? = 1
@@ -845,7 +845,7 @@ configure:5409: $? = 0
 configure:5409: result: yes
 configure:5420: checking for stricmp
 configure:5420: gcc -o conftest -g -O2   conftest.c  >&5
-/tmp/ccRr846C.o: In function `main':
+/tmp/ccIbXcmR.o: In function `main':
 /home/j3gb3rt/Documents/CS4210Proj3/xmlrpc-c/conftest.c:72: undefined reference to `stricmp'
 collect2: error: ld returned 1 exit status
 configure:5420: $? = 1
@@ -928,7 +928,7 @@ configure: failed program was:
 configure:5420: result: no
 configure:5431: checking for _stricmp
 configure:5431: gcc -o conftest -g -O2   conftest.c  >&5
-/tmp/ccPvCJfH.o: In function `main':
+/tmp/ccgwRODU.o: In function `main':
 /home/j3gb3rt/Documents/CS4210Proj3/xmlrpc-c/conftest.c:72: undefined reference to `_stricmp'
 collect2: error: ld returned 1 exit status
 configure:5431: $? = 1

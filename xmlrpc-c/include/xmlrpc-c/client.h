@@ -408,7 +408,7 @@ XMLRPC_CLIENT_EXPORTED
 void
 xmlrpc_client_start_multi_rpcf_va(xmlrpc_env *    const envP,
                             xmlrpc_client * const clientP,
-                            const char *  	const serverUrls[],
+                            const char **   serverUrls,
                             const char *    const methodName,
                             xmlrpc_multi_wait_type wait_type,
 							int 			const server_num,
