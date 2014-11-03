@@ -31,6 +31,7 @@
 		<Compiler>
 			<Add option="-Wall" />
 		</Compiler>
+		<Unit filename="../../../../../../usr/include/xmlrpc-c/client.h" />
 		<Unit filename="../../testProgram/client.c">
 			<Option compilerVar="CC" />
 		</Unit>
@@ -40,6 +41,53 @@
 		<Unit filename="../../testProgram/xmlrpc_asynch_client.c">
 			<Option compilerVar="CC" />
 		</Unit>
+		<Unit filename="../../xmlrpc-c/include/xmlrpc-c/abyss.h" />
+		<Unit filename="../../xmlrpc-c/include/xmlrpc-c/abyss_opensslsock.h" />
+		<Unit filename="../../xmlrpc-c/include/xmlrpc-c/abyss_unixsock.h" />
+		<Unit filename="../../xmlrpc-c/include/xmlrpc-c/abyss_winsock.h" />
+		<Unit filename="../../xmlrpc-c/include/xmlrpc-c/base.h" />
+		<Unit filename="../../xmlrpc-c/include/xmlrpc-c/base.hpp" />
+		<Unit filename="../../xmlrpc-c/include/xmlrpc-c/base64.hpp" />
+		<Unit filename="../../xmlrpc-c/include/xmlrpc-c/base64_int.h" />
+		<Unit filename="../../xmlrpc-c/include/xmlrpc-c/base_int.h" />
+		<Unit filename="../../xmlrpc-c/include/xmlrpc-c/c_util.h" />
+		<Unit filename="../../xmlrpc-c/include/xmlrpc-c/client.h" />
+		<Unit filename="../../xmlrpc-c/include/xmlrpc-c/client.hpp" />
+		<Unit filename="../../xmlrpc-c/include/xmlrpc-c/client_global.h" />
+		<Unit filename="../../xmlrpc-c/include/xmlrpc-c/client_int.h" />
+		<Unit filename="../../xmlrpc-c/include/xmlrpc-c/client_simple.hpp" />
+		<Unit filename="../../xmlrpc-c/include/xmlrpc-c/client_transport.hpp" />
+		<Unit filename="../../xmlrpc-c/include/xmlrpc-c/girerr.hpp" />
+		<Unit filename="../../xmlrpc-c/include/xmlrpc-c/girmem.hpp" />
+		<Unit filename="../../xmlrpc-c/include/xmlrpc-c/inttypes.h" />
+		<Unit filename="../../xmlrpc-c/include/xmlrpc-c/json.h" />
+		<Unit filename="../../xmlrpc-c/include/xmlrpc-c/lock.h" />
+		<Unit filename="../../xmlrpc-c/include/xmlrpc-c/lock_none.h" />
+		<Unit filename="../../xmlrpc-c/include/xmlrpc-c/lock_platform.h" />
+		<Unit filename="../../xmlrpc-c/include/xmlrpc-c/lock_pthread.h" />
+		<Unit filename="../../xmlrpc-c/include/xmlrpc-c/lock_windows.h" />
+		<Unit filename="../../xmlrpc-c/include/xmlrpc-c/oldcppwrapper.hpp" />
+		<Unit filename="../../xmlrpc-c/include/xmlrpc-c/oldxmlrpc.h" />
+		<Unit filename="../../xmlrpc-c/include/xmlrpc-c/packetsocket.hpp" />
+		<Unit filename="../../xmlrpc-c/include/xmlrpc-c/registry.hpp" />
+		<Unit filename="../../xmlrpc-c/include/xmlrpc-c/select_int.h" />
+		<Unit filename="../../xmlrpc-c/include/xmlrpc-c/server.h" />
+		<Unit filename="../../xmlrpc-c/include/xmlrpc-c/server_abyss.h" />
+		<Unit filename="../../xmlrpc-c/include/xmlrpc-c/server_abyss.hpp" />
+		<Unit filename="../../xmlrpc-c/include/xmlrpc-c/server_cgi.h" />
+		<Unit filename="../../xmlrpc-c/include/xmlrpc-c/server_cgi.hpp" />
+		<Unit filename="../../xmlrpc-c/include/xmlrpc-c/server_pstream.hpp" />
+		<Unit filename="../../xmlrpc-c/include/xmlrpc-c/server_w32httpsys.h" />
+		<Unit filename="../../xmlrpc-c/include/xmlrpc-c/sleep_int.h" />
+		<Unit filename="../../xmlrpc-c/include/xmlrpc-c/string_int.h" />
+		<Unit filename="../../xmlrpc-c/include/xmlrpc-c/string_number.h" />
+		<Unit filename="../../xmlrpc-c/include/xmlrpc-c/time_int.h" />
+		<Unit filename="../../xmlrpc-c/include/xmlrpc-c/timeout.hpp" />
+		<Unit filename="../../xmlrpc-c/include/xmlrpc-c/transport.h" />
+		<Unit filename="../../xmlrpc-c/include/xmlrpc-c/util.h" />
+		<Unit filename="../../xmlrpc-c/include/xmlrpc-c/util_int.h" />
+		<Unit filename="../../xmlrpc-c/include/xmlrpc-c/xml.hpp" />
+		<Unit filename="../../xmlrpc-c/include/xmlrpc-c/xmlparser.h" />
 		<Unit filename="../../xmlrpc-c/src/Makefile" />
 		<Unit filename="../../xmlrpc-c/src/abyss_handler.c">
 			<Option compilerVar="CC" />

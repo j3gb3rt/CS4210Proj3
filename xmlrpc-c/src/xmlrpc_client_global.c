@@ -343,10 +343,10 @@ xmlrpc_client_call_server_asynch_params(
 //must enter number of servers, as well as a format string with the servers. Servers come first
 void
 xmlrpc_client_call_asynch(const char * const methodName,
-                          xmlrpc_response_handler responseHandler,
+                          xmlrpc_multi_response_handler responseHandler,
                           void *       const userData,
                           const char * const format,
-			  int 	      const server_num,
+			  			  int  	       const server_num,
                           ...) {
 
     char *servers[server_num];
@@ -373,21 +373,22 @@ xmlrpc_client_call_asynch(const char * const methodName,
 		servers[i] = va_arg(args, char *);
 	}
 
-	for(i = 0; i < server_num; i++)
-	{
+	//for(i = 0; i < server_num; i++)
+	//{
 		//to prevent invoking of callback handler, make new function that calls
 		//	callback handler once all the servers have returned
 
-        	xmlrpc_client_start_rpcf_va(&env, globalClientP,
-                                    servers[i], methodName,
-                                    responseHandler, userData,
+        	xmlrpc_client_start_multi_rpcf_va(&env, globalClientP,
+                                    servers, methodName,
+									,ALL ,
+                                    ,responseHandler, userData,
                                     arg_format, args);
 
     		if (env.fault_occurred)
-       			(*responseHandler)(servers[i], methodName, NULL, userData, &env, NULL);
+       			(*responseHandler)(servers, methodName, NULL, userData, &env, NULL);
 
 
-	}
+	//}
 
 	xmlrpc_env_clean(&env);
         va_end(args);

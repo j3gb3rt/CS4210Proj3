@@ -12,6 +12,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <pthread.h>
 #include <assert.h>
 #include <errno.h>
 
@@ -25,7 +26,7 @@
 #include "xmlrpc-c/client_int.h"
 /* transport_config.h defines XMLRPC_DEFAULT_TRANSPORT,
     MUST_BUILD_WININET_CLIENT, MUST_BUILD_CURL_CLIENT,
-    MUST_BUILD_LIBWWW_CLIENT 
+    MUST_BUILD_LIBWWW_CLIENT
 */
 #include "transport_config.h"
 #include "version.h"
@@ -44,7 +45,6 @@ struct xmlrpc_client {
     xmlrpc_dialect                     dialect;
     xmlrpc_progress_fn *               progressFn;
 };
-
 
 
 struct xmlrpc_call_info {
@@ -71,9 +71,13 @@ struct xmlrpc_call_info {
         const char *   methodName;
         xmlrpc_value * paramArrayP;
     } completionArgs;
-    xmlrpc_response_handler * completionFn;
+	int serverCount;
+	int *completedRequests;
+	pthread_mutex_t *completedRequestsMutex;
+	xmlrpc_multi_wait_type wait_type;    
+	xmlrpc_response_handler * completionFn;
 
-    
+
     /* The serialized XML data passed to this call. We keep this around
     ** for use by our source_anchor field. */
     xmlrpc_mem_block *serialized_xml;
@@ -295,7 +299,7 @@ getTransportInfo(
         transportNameParm = NULL;
     else
         transportNameParm = clientparmsP->transport;
-    
+
     if (parmSize < XMLRPC_CPSIZE(transportP))
         transportP = NULL;
     else
@@ -325,7 +329,7 @@ getTransportInfo(
     if (!envP->fault_occurred) {
         getTransportParmsFromClientParms(
             envP, clientparmsP, parmSize, transportParmsP);
-        
+
         if (!envP->fault_occurred) {
             if (transportParmsP->parmsP && !transportNameParm)
                 xmlrpc_faultf(
@@ -344,16 +348,16 @@ getDialectFromClientParms(
     const struct xmlrpc_clientparms * const clientparmsP,
     unsigned int                      const parmSize,
     xmlrpc_dialect *                  const dialectP) {
-    
+
     if (parmSize < XMLRPC_CPSIZE(dialect))
         *dialectP = xmlrpc_dialect_i8;
     else
         *dialectP = clientparmsP->dialect;
 }
-            
 
 
-static void 
+
+static void
 clientCreate(
     xmlrpc_env *                               const envP,
     bool                                       const myTransport,
@@ -388,7 +392,7 @@ clientCreate(
             clientP->transportP   = transportP;
             clientP->dialect      = dialect;
             clientP->progressFn   = progressFn;
-            
+
             *clientPP = clientP;
         }
     }
@@ -414,7 +418,7 @@ createTransportAndClient(
     getTransportOps(envP, transportName, &transportOpsP);
     if (!envP->fault_occurred) {
         xmlrpc_client_transport * transportP;
-        
+
         /* The following call is not thread-safe */
         transportOpsP->create(
             envP, flags, appname, appversion,
@@ -425,7 +429,7 @@ createTransportAndClient(
 
             clientCreate(envP, myTransportTrue, transportOpsP, transportP,
                          dialect, progressFn, clientPP);
-            
+
             if (envP->fault_occurred)
                 transportOpsP->destroy(transportP);
         }
@@ -434,7 +438,7 @@ createTransportAndClient(
 
 
 
-void 
+void
 xmlrpc_client_create(xmlrpc_env *                      const envP,
                      int                               const flags,
                      const char *                      const appname,
@@ -442,7 +446,7 @@ xmlrpc_client_create(xmlrpc_env *                      const envP,
                      const struct xmlrpc_clientparms * const clientparmsP,
                      unsigned int                      const parmSize,
                      xmlrpc_client **                  const clientPP) {
-    
+
     XMLRPC_ASSERT_ENV_OK(envP);
     XMLRPC_ASSERT_PTR_OK(clientPP);
 
@@ -461,14 +465,14 @@ xmlrpc_client_create(xmlrpc_env *                      const envP,
         xmlrpc_dialect dialect;
         xmlrpc_progress_fn * progressFn;
 
-        getTransportInfo(envP, clientparmsP, parmSize, &transportName, 
+        getTransportInfo(envP, clientparmsP, parmSize, &transportName,
                          &transportparms, &transportOpsP, &transportP);
-        
+
         getDialectFromClientParms(clientparmsP, parmSize, &dialect);
 
         progressFn = parmSize >= XMLRPC_CPSIZE(progressFn) ?
             clientparmsP->progressFn : NULL;
-            
+
         if (!envP->fault_occurred) {
             if (transportName)
                 createTransportAndClient(envP, transportName,
@@ -489,7 +493,7 @@ xmlrpc_client_create(xmlrpc_env *                      const envP,
 
 
 
-void 
+void
 xmlrpc_client_destroy(xmlrpc_client * const clientP) {
 
     XMLRPC_ASSERT_PTR_OK(clientP);
@@ -531,7 +535,7 @@ makeCallXml(xmlrpc_env *               const envP,
             if (envP->fault_occurred)
                 XMLRPC_MEMBLOCK_FREE(char, callXmlP);
         }
-    }    
+    }
 }
 
 
@@ -608,26 +612,26 @@ xmlrpc_client_call2(xmlrpc_env *               const envP,
     XMLRPC_ASSERT_PTR_OK(paramArrayP);
 
     makeCallXml(envP, methodName, paramArrayP, clientP->dialect, &callXmlP);
-    
+
     if (!envP->fault_occurred) {
         xmlrpc_mem_block * respXmlP;
-        
-        xmlrpc_traceXml("XML-RPC CALL", 
+
+        xmlrpc_traceXml("XML-RPC CALL",
                         XMLRPC_MEMBLOCK_CONTENTS(char, callXmlP),
                         XMLRPC_MEMBLOCK_SIZE(char, callXmlP));
-        
+
         clientP->transportOps.call(
             envP, clientP->transportP, serverInfoP, callXmlP, &respXmlP);
         if (!envP->fault_occurred) {
             int faultCode;
             const char * faultString;
 
-            xmlrpc_traceXml("XML-RPC RESPONSE", 
+            xmlrpc_traceXml("XML-RPC RESPONSE",
                             XMLRPC_MEMBLOCK_CONTENTS(char, respXmlP),
                             XMLRPC_MEMBLOCK_SIZE(char, respXmlP));
-            
+
             parseResponse(envP, respXmlP, resultPP, &faultCode, &faultString);
-            
+
             if (!envP->fault_occurred) {
                 if (faultString) {
                     xmlrpc_env_set_fault_formatted(
@@ -685,7 +689,7 @@ computeParamArray(xmlrpc_env *    const envP,
             env.fault_string);
     else {
         XMLRPC_ASSERT_VALUE_OK(paramArrayP);
-        
+
         if (*suffix != '\0')
             xmlrpc_faultf(envP,
                           "Junk after the parameter array specifier: '%s'.  "
@@ -726,7 +730,7 @@ xmlrpc_client_call_server2_va(xmlrpc_env *               const envP,
        xmlrpc_client_call_server().
     */
 
-    xmlrpc_value * paramArrayP;
+    xmlrpc_value * paramArrayP;numServers
         /* The XML-RPC parameter list array */
 
     XMLRPC_ASSERT_ENV_OK(envP);
@@ -739,7 +743,7 @@ xmlrpc_client_call_server2_va(xmlrpc_env *               const envP,
                             resultPP);
 
         xmlrpc_DECREF(paramArrayP);
-    }        
+    }
 }
 
 
@@ -769,7 +773,7 @@ xmlrpc_client_call2f_va(xmlrpc_env *               const envP,
         xmlrpc_server_info * serverInfoP;
 
         serverInfoP = xmlrpc_server_info_new(envP, serverUrl);
-            
+
         if (!envP->fault_occurred) {
             /* Perform the actual XML-RPC call. */
             xmlrpc_client_call2(envP, clientP,
@@ -810,7 +814,7 @@ xmlrpc_client_call2f(xmlrpc_env *    const envP,
    Asynchronous Call
 =========================================================================*/
 
-static void 
+static void
 callInfoSetCompletion(xmlrpc_env *              const envP,
                       struct xmlrpc_call_info * const callInfoP,
                       const char *              const serverUrl,
@@ -875,8 +879,53 @@ callInfoCreate(xmlrpc_env *               const envP,
 
         if (!envP->fault_occurred) {
             callInfoP->serialized_xml = callXmlP;
-            
+
             callInfoSetCompletion(envP, callInfoP, serverUrl, methodName,
+                                  paramArrayP,
+                                  completionFn, progressFn, userHandle);
+
+            if (envP->fault_occurred)
+                free(callInfoP);
+        }
+    }
+    *callInfoPP = callInfoP;
+}
+
+static void
+callInfoCreateMulti(xmlrpc_env *               const envP,
+               const char *               const methodName,
+               xmlrpc_value *             const paramArrayP,
+               xmlrpc_dialect             const dialect,
+               const char *               const serverUrl,
+               xmlrpc_response_handler          completionFn,
+               xmlrpc_progress_fn               progressFn,
+               void *                     const userHandle,
+               struct xmlrpc_call_info ** const callInfoPP) {
+/*----------------------------------------------------------------------------
+   Create a call_info object.  A call_info object represents an XML-RPC
+   call.
+-----------------------------------------------------------------------------*/
+    struct xmlrpc_call_info * callInfoP;
+
+    XMLRPC_ASSERT_PTR_OK(serverUrl);
+    XMLRPC_ASSERT_PTR_OK(methodName);
+    XMLRPC_ASSERT_VALUE_OK(paramArrayP);
+    XMLRPC_ASSERT_PTR_OK(callInfoPP);
+
+    MALLOCVAR(callInfoP);
+    if (callInfoP == NULL)
+        xmlrpc_faultf(envP, "Couldn't allocate memory for xmlrpc_call_info");
+    else {
+        xmlrpc_mem_block * callXmlP;
+
+        makeCallXml(envP, methodName, paramArrayP, dialect, &callXmlP);
+
+        if (!envP->fault_occurred) {
+            callInfoP->serialized_xml = callXmlP;
+
+            callInfoP->
+
+			callInfoSetCompletion(envP, callInfoP, serverUrl, methodName,
                                   paramArrayP,
                                   completionFn, progressFn, userHandle);
 
@@ -889,7 +938,7 @@ callInfoCreate(xmlrpc_env *               const envP,
 
 
 
-static void 
+static void
 callInfoDestroy(struct xmlrpc_call_info * const callInfoP) {
 
     XMLRPC_ASSERT_PTR_OK(callInfoP);
@@ -907,7 +956,7 @@ callInfoDestroy(struct xmlrpc_call_info * const callInfoP) {
 
 
 
-void 
+void
 xmlrpc_client_event_loop_finish(xmlrpc_client * const clientP) {
 
     XMLRPC_ASSERT_PTR_OK(clientP);
@@ -918,7 +967,7 @@ xmlrpc_client_event_loop_finish(xmlrpc_client * const clientP) {
 
 
 
-void 
+void
 xmlrpc_client_event_loop_finish_timeout(xmlrpc_client * const clientP,
                                         xmlrpc_timeout  const timeout) {
 
@@ -984,19 +1033,52 @@ asynchComplete(struct xmlrpc_call_info * const callInfoP,
             }
         }
     }
-    /* Call the user's completion function with the RPC result */
-    (*callInfoP->completionFn)(callInfoP->completionArgs.serverUrl, 
-                               callInfoP->completionArgs.methodName, 
-                               callInfoP->completionArgs.paramArrayP,
-                               callInfoP->userHandle,
-                               &env, resultP);
+    //Check for response type
+	//by calling method with counter
+	if (callInfoP->serverCount != NULL) {
+		int neededRequestCount = 0;
+		
+		if (callInfoP->wait_type == ALL) {
+			neededRequestCount = callInfoP->serverCount;
+		} else if (callInfoP->wait_type == MAJORITY) {
+			neededRequestCount = (callInfoP->serverCount / 2) + 1;
+		} else if (callInfoP->wait_type == ANY) {
+			neededRequestCount = 1;
+		}
+		pthread_mutex_lock(callInfoP->completedRequestsMutex);
+		*(callInfoP->completedRequests)++;
+		if (*(callInfoP->completedRequests) >= neededRequestCount) {
+			pthread_mutex_unlock(callInfoP->completedRequestsMutex);
+			(*callInfoP->completionFn)(callInfoP->completionArgs.serverUrl,
+                               	   callInfoP->completionArgs.methodName,
+                                   callInfoP->completionArgs.paramArrayP,
+                                   callInfoP->userHandle,
+                                   &env, resultP);
+			if (!env.fault_occurred)
+        		xmlrpc_DECREF(resultP);
 
-    if (!env.fault_occurred)
-        xmlrpc_DECREF(resultP);
+    		callInfoDestroy(callInfoP);
 
-    callInfoDestroy(callInfoP);
+    		xmlrpc_env_clean(&env);
+		} else 
+			pthread_mutex_unlock(callInfoP->completedRequestsMutex);
+			//do nothing
+		}	
+	}
+	else {	
+		/* Call the user's completion function with the RPC result */
+    	(*callInfoP->completionFn)(callInfoP->completionArgs.serverUrl,
+                               	   callInfoP->completionArgs.methodName,
+                                   callInfoP->completionArgs.paramArrayP,
+                                   callInfoP->userHandle,
+                                   &env, resultP);
+		if (!env.fault_occurred)
+        	xmlrpc_DECREF(resultP);
 
-    xmlrpc_env_clean(&env);
+    	callInfoDestroy(callInfoP);
+
+    	xmlrpc_env_clean(&env);
+	}
 }
 
 
@@ -1027,7 +1109,7 @@ xmlrpc_client_start_rpc(xmlrpc_env *               const envP,
                         xmlrpc_value *             const paramArrayP,
                         xmlrpc_response_handler          completionFn,
                         void *                     const userHandle) {
-    
+
     struct xmlrpc_call_info * callInfoP;
 
     XMLRPC_ASSERT_ENV_OK(envP);
@@ -1043,16 +1125,57 @@ xmlrpc_client_start_rpc(xmlrpc_env *               const envP,
 
     if (!envP->fault_occurred) {
         xmlrpc_traceXml(
-            "XML-RPC CALL", 
+            "XML-RPC CALL",
             XMLRPC_MEMBLOCK_CONTENTS(char, callInfoP->serialized_xml),
             XMLRPC_MEMBLOCK_SIZE(char, callInfoP->serialized_xml));
-            
+
         clientP->transportOps.send_request(
             envP, clientP->transportP, serverInfoP,
             callInfoP->serialized_xml,
             &asynchComplete, clientP->progressFn ? &progress : NULL,
             callInfoP);
-    }    
+    }
+    if (envP->fault_occurred)
+        callInfoDestroy(callInfoP);
+    else {
+        /* asynchComplete() will destroy *callInfoP */
+    }
+}
+
+void
+xmlrpc_client_start_multi_rpc(xmlrpc_env *               const envP,
+                        struct xmlrpc_client *     const clientP,
+                        const xmlrpc_server_info * const serverInfoP,
+                        const char *               const methodName,
+                        xmlrpc_value *             const paramArrayP,
+                        xmlrpc_response_handler          completionFn,
+                        void *                     const userHandle) {
+
+    struct xmlrpc_call_info * callInfoP;
+
+    XMLRPC_ASSERT_ENV_OK(envP);
+    XMLRPC_ASSERT_PTR_OK(clientP);
+    XMLRPC_ASSERT_PTR_OK(serverInfoP);
+    XMLRPC_ASSERT_PTR_OK(methodName);
+    XMLRPC_ASSERT_VALUE_OK(paramArrayP);
+
+    callInfoCreateMulti(envP, methodName, paramArrayP, clientP->dialect,
+                   serverInfoP->serverUrl,
+                   completionFn, clientP->progressFn, userHandle,
+                   &callInfoP);
+
+    if (!envP->fault_occurred) {
+        xmlrpc_traceXml(
+            "XML-RPC CALL",
+            XMLRPC_MEMBLOCK_CONTENTS(char, callInfoP->serialized_xml),
+            XMLRPC_MEMBLOCK_SIZE(char, callInfoP->serialized_xml));
+
+        clientP->transportOps.send_request_multi(
+            envP, clientP->transportP, serverInfoP,
+            callInfoP->serialized_xml,
+            &asynchCompleteMulti, clientP->progressFn ? &progress : NULL,
+            callInfoP);
+    }
     if (envP->fault_occurred)
         callInfoDestroy(callInfoP);
     else {
@@ -1072,7 +1195,7 @@ xmlrpc_client_start_rpcf_server_va(
     void *                     const userHandle,
     const char *               const format,
     va_list                    args) {
-    
+
     xmlrpc_value * paramArrayP;
         /* The XML-RPC parameter list array */
 
@@ -1088,7 +1211,39 @@ xmlrpc_client_start_rpcf_server_va(
         xmlrpc_client_start_rpc(envP, clientP,
                                 serverInfoP, methodName, paramArrayP,
                                 responseHandler, userHandle);
-        
+
+        xmlrpc_DECREF(paramArrayP);
+    }
+}
+
+void
+xmlrpc_client_start_multi_rpcf_server_va(
+    xmlrpc_env *               const envP,
+    xmlrpc_client *            const clientP,
+    const xmlrpc_server_info * const serverInfoP[],
+    const char *               const methodName,
+	xmlrpc_multi_wait_type numResponses,
+    xmlrpc_response_handler responseHandler,
+    void *                     const userHandle,
+    const char *               const format,
+    va_list                    args) {
+
+    xmlrpc_value * paramArrayP;
+        /* The XML-RPC parameter list array */
+
+    XMLRPC_ASSERT_ENV_OK(envP);
+    XMLRPC_ASSERT_PTR_OK(clientP);
+    XMLRPC_ASSERT_PTR_OK(serverInfoP);
+    XMLRPC_ASSERT_PTR_OK(methodName);
+    XMLRPC_ASSERT_PTR_OK(format);
+
+    computeParamArray(envP, format, args, &paramArrayP);
+
+    if (!envP->fault_occurred) {
+        xmlrpc_client_start_multi_rpc(envP, clientP,
+                                serverInfoP, methodName, paramArrayP,
+                                responseHandler, userHandle);
+
         xmlrpc_DECREF(paramArrayP);
     }
 }
@@ -1098,7 +1253,7 @@ xmlrpc_client_start_rpcf_server_va(
 void
 xmlrpc_client_start_rpcf_va(xmlrpc_env *    const envP,
                             xmlrpc_client * const clientP,
-                            const char *    const serverUrl,
+                            const char *    const serverUrls,
                             const char *    const methodName,
                             xmlrpc_response_handler responseHandler,
                             void *          const userHandle,
@@ -1108,22 +1263,56 @@ xmlrpc_client_start_rpcf_va(xmlrpc_env *    const envP,
     xmlrpc_server_info * serverInfoP;
 
     XMLRPC_ASSERT_ENV_OK(envP);
-
-    serverInfoP = xmlrpc_server_info_new(envP, serverUrl);
+    
+	serverInfoP = xmlrpc_server_info_new(envP, serverUrl);
+    
     if (!envP->fault_occurred) {
         xmlrpc_client_start_rpcf_server_va(
             envP, clientP,
             serverInfoP, methodName,
             responseHandler, userHandle,
             format, args);
-        
+
+        xmlrpc_server_info_free(serverInfoP);
+    }
+}
+
+void
+xmlrpc_client_start_multi_rpcf_va(xmlrpc_env *    const envP,
+                            xmlrpc_client * const clientP,
+                            const char *    const serverUrls[],
+                            const char *    const methodName,
+                            xmlrpc_multi_wait_type numResponses,
+                            xmlrpc_response_handler responseHandler,
+                            void *          const userHandle,
+                            const char *    const format,
+                            va_list               args) {
+
+    xmlrpc_server_info * serverInfoP[serverUrls.length];
+	bool fault_occurred;
+
+    XMLRPC_ASSERT_ENV_OK(envP);
+	for (int i = 0; i < serverUrls.length; i++) {
+    	serverInfoP[i] = xmlrpc_server_info_new(envP, serverUrl);
+		if (envP->fault_occurred) {
+			fault_occurred = true;
+		}
+	}
+    if (!fault_occurred) {
+        xmlrpc_client_start_multi_rpcf_server_va(
+            envP, clientP,
+            serverInfoP, methodName,
+			numResponses,
+            responseHandler, userHandle,
+            format, args);
+
         xmlrpc_server_info_free(serverInfoP);
     }
 }
 
 
 
-void 
+void
 xmlrpc_client_start_rpcf(xmlrpc_env *    const envP,
                          xmlrpc_client * const clientP,
                          const char *    const serverUrl,
@@ -1150,7 +1339,7 @@ xmlrpc_client_start_rpcf(xmlrpc_env *    const envP,
    Miscellaneous
 =========================================================================*/
 
-const char * 
+const char *
 xmlrpc_client_get_default_transport(xmlrpc_env * const envP ATTR_UNUSED) {
 
     return XMLRPC_DEFAULT_TRANSPORT;
@@ -1179,8 +1368,8 @@ xmlrpc_client_set_interrupt(xmlrpc_client * const clientP,
 **    notice, this list of conditions and the following disclaimer in the
 **    documentation and/or other materials provided with the distribution.
 ** 3. The name of the author may not be used to endorse or promote products
-**    derived from this software without specific prior written permission. 
-**  
+**    derived from this software without specific prior written permission.
+**
 ** THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
 ** ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
 ** IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
