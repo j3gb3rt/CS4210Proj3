@@ -58,7 +58,7 @@ main(int           const argc,
            "of 5 and 7...\n", serverUrl, methodName);
 
     /* Make the remote procedure call */
-    resultP = xmlrpc_client_call(&env, methodName, "(sssii)", 2, 3, serverUrl, serverUrl2, serverUrl3, 
+    resultP = xmlrpc_client_call(&env, methodName, "(sssii)", ALL, 3, serverUrl, serverUrl2, serverUrl3, 
 				(xmlrpc_int32) 5, (xmlrpc_int32) 7);
     dieIfFaultOccurred(&env);
     

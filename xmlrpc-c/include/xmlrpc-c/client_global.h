@@ -56,8 +56,8 @@ xmlrpc_value *
 xmlrpc_client_call(xmlrpc_env * const envP,
                    char * const methodName,
                    const char * const format,
-		   		   const int responses,
-                   const int server_num,
+		   		   xmlrpc_multi_wait_type  wait_type,
+                   const int serverCount,
                    ...);
 
 XMLRPC_CLIENT_EXPORTED
@@ -106,7 +106,7 @@ xmlrpc_client_call_asynch(const char * const methodName,
                           void *       const userData,
                           const char * const format,
 						  xmlrpc_multi_wait_type  wait_type,
-			  			  int  	       const server_num,
+			  			  int  	       const serverCount,
                           ...);
 
 XMLRPC_CLIENT_EXPORTED

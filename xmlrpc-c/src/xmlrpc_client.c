@@ -71,10 +71,9 @@ struct xmlrpc_call_info {
         const char *   methodName;
         xmlrpc_value * paramArrayP;
     } completionArgs;
-	int serverCount;
+	int neededRequests;
 	int *completedRequests;
-	pthread_mutex_t *completedRequestsMutex;
-	xmlrpc_multi_wait_type wait_type;    
+	pthread_mutex_t *completedRequestsMutex;   
 	xmlrpc_response_handler * completionFn;
 
 
@@ -900,7 +899,7 @@ callInfoCreateMulti(xmlrpc_env *               const envP,
 			   int *							counter,
 			   int 								serverCount,
 			   pthread_mutex_t *				counterMutex,
-			   xmlrpc_multi_wait_type		    numResponses,
+			   xmlrpc_multi_wait_type		    wait_type,
                xmlrpc_response_handler          completionFn,
                xmlrpc_progress_fn               progressFn,
                void *                     const userHandle,
@@ -926,11 +925,18 @@ callInfoCreateMulti(xmlrpc_env *               const envP,
 
         if (!envP->fault_occurred) {
             callInfoP->serialized_xml = callXmlP;
-
-            callInfoP->serverCount = serverCount;
+		
+			if (wait_type == ALL) {
+				callInfoP->neededRequests = serverCount;
+			} else if (wait_type == MAJORITY) {
+				callInfoP->neededRequests = (serverCount / 2) + 1;
+			} else if (wait_type == ANY) {
+				callInfoP->neededRequests = 1;
+			} else {
+				callInfoP->neededRequests = 0;
+			}
 			callInfoP->completedRequests = counter;
 			callInfoP->completedRequestsMutex = counterMutex;
-			callInfoP->wait_type = numResponses;
 
 			callInfoSetCompletion(envP, callInfoP, serverUrl, methodName,
                                   paramArrayP,
@@ -1042,19 +1048,11 @@ asynchComplete(struct xmlrpc_call_info * const callInfoP,
     }
     //Check for response type
 	//by calling method with counter
-	if (&(callInfoP->serverCount) != NULL) {
-		int neededRequestCount = 0;
+	if (&(callInfoP->neededRequests) != NULL) {
 		
-		if (callInfoP->wait_type == ALL) {
-			neededRequestCount = callInfoP->serverCount;
-		} else if (callInfoP->wait_type == MAJORITY) {
-			neededRequestCount = (callInfoP->serverCount / 2) + 1;
-		} else if (callInfoP->wait_type == ANY) {
-			neededRequestCount = 1;
-		}
 		pthread_mutex_lock(callInfoP->completedRequestsMutex);
 		(*(callInfoP->completedRequests))++;
-		if (*(callInfoP->completedRequests) >= neededRequestCount) {
+		if (*(callInfoP->completedRequests) >= callInfoP->neededRequests) {
 			pthread_mutex_unlock(callInfoP->completedRequestsMutex);
 			(*callInfoP->completionFn)(callInfoP->completionArgs.serverUrl,
                                	   callInfoP->completionArgs.methodName,

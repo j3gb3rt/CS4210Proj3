@@ -24,15 +24,18 @@ LDFLAGS += $(LDFLAGS_PERSONAL) $(LADD)
 XMLRPC_C_CONFIG = $(BLDDIR)/xmlrpc-c-config.test
 
 CLIENTPROGS = \
-  auth_client \
-  compound_value_client \
-  synch_client \
-  xmlrpc_sample_add_client \
-  xmlrpc_asynch_client \
-  xmlrpc_synch_add_client\
-  xmlrpc_synch2_any\
-  xmlrpc_synch2_majority\
-  xmlrpc_synch2_all\
+  xmlrpc_synch2_multi_client \
+  xmlrpc_asynch_multi_client
+
+  #auth_client \
+  #synch_client \
+  #xmlrpc_sample_add_client \
+  #xmlrpc_asynch_client \
+  #xmlrpc_synch_add_client\
+  #compound_value_client \  
+  #\
+  #xmlrpc_synch2_majority\
+  #xmlrpc_synch2_all\
 
 ifeq ($(MUST_BUILD_CURL_CLIENT),yes)
   ifneq ($(MSVCRT),yes)

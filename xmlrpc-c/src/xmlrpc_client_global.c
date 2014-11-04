@@ -133,15 +133,16 @@ synch_rpc_helper(void *args);
 //structure for passing in multiple args to thread
 typedef struct arg_struct
 {
-		xmlrpc_env *		 envP;
-	 	xmlrpc_client *		 clientP;
-		char *			 serverUrl;
-		char *			 methodName;
-		char * 			 format;
-		xmlrpc_value **		 resultPP;
-		va_list *			 args;
-		pthread_mutex_t *	 counter_mutex;
-		int *			 counter;
+		xmlrpc_env *		envP;
+	 	xmlrpc_client *		clientP;
+		char *			 	serverUrl;
+		char *			 	methodName;
+		char * 			 	format;
+		xmlrpc_value **		resultPP;
+		va_list *			args;
+		pthread_mutex_t *	counter_mutex;
+		int *			 	counter;
+		int 				threshold;
 } arg_struct_t;
 
 
@@ -152,12 +153,19 @@ synch_rpc_helper(void *args){
 	xmlrpc_client_call2f_va(arg_struct->envP, arg_struct->clientP, arg_struct->serverUrl,
 					 arg_struct->methodName, arg_struct->format,
 					 arg_struct->resultPP, *arg_struct->args);
-
+	
 
 	pthread_mutex_lock(arg_struct->counter_mutex);
-	*(arg_struct->counter) = *(arg_struct->counter) + 1;
+	int counter = *(arg_struct->counter);
+	if (*(arg_struct->counter) < arg_struct->threshold) {
+		*(arg_struct->counter) = *(arg_struct->counter) + 1;
+	}
 	pthread_mutex_unlock(arg_struct->counter_mutex);
-
+	if (counter < arg_struct->threshold) {
+		xmlrpc_int32 sum;
+		xmlrpc_read_int(arg_struct->envP, *(arg_struct->resultPP), &sum);	
+		printf("Server at %s returned result %d\n", arg_struct->serverUrl, sum);
+	}
 }
 
 //servers come before method args
@@ -165,17 +173,16 @@ xmlrpc_value *
 xmlrpc_client_call(xmlrpc_env * const envP,
                    char * const methodName,
                    const char * const format,
-		   		   const int responses,
-                   const int server_num,
+		   		   xmlrpc_multi_wait_type  wait_type,
+                   const int serverCount,
                    ...) {
 
     xmlrpc_value * resultP;
-    char *servers[server_num];
-    pthread_t threads[server_num];
+    pthread_t threads[serverCount];
 
     char arg_format[strlen(format)];
     strcpy (arg_format, "(");
-    strcat (arg_format, format + 1 + server_num);
+    strcat (arg_format, format + 1 + serverCount);
 
     validateGlobalClientExists(envP);
 
@@ -185,61 +192,61 @@ xmlrpc_client_call(xmlrpc_env * const envP,
 
     //set threshold
     int threshold;
-    if(responses == 0)
-    {
-	threshold = 1;
-    }else if(responses == 1)
-    {
-	threshold = server_num/2 + 1;
-    }else
-    {
-	threshold = server_num;
-    }
+	if (wait_type == ALL) {
+		threshold = serverCount;
+	} else if (wait_type == MAJORITY) {
+		threshold = (serverCount / 2) + 1;
+	} else if (wait_type == ANY) {
+		threshold = 1;
+	} else {
+		threshold = 0;
+	}
 
-    arg_struct_t *rpc_args = malloc(sizeof(arg_struct_t));
-
+    arg_struct_t *rpc_args[serverCount];
 
     if (!envP->fault_occurred) {
         va_list args;
 
-        va_start(args, server_num);
+        va_start(args, serverCount);
 
-	int i;
-	for(i = 0; i < server_num; i++)
-	{
-		servers[i] = va_arg(args, char *);
-	}
+		int i;
+		for(i = 0; i < serverCount; i++)
+		{
+			rpc_args[i] = malloc(sizeof(arg_struct_t));
 
-	//allocate arg_struct arguments
-	rpc_args->envP = envP;
-	rpc_args->clientP = globalClientP;
-	rpc_args->methodName = methodName;
-	rpc_args->format = arg_format;
-	rpc_args->resultPP = &resultP;
-	rpc_args->args = &args;
-	rpc_args->counter_mutex = &counter_mutex;
-	rpc_args->counter = &return_counter;
+			//allocate arg_struct arguments
+			rpc_args[i]->envP = envP;
+			rpc_args[i]->clientP = globalClientP;
+			rpc_args[i]->methodName = methodName;
+			rpc_args[i]->format = arg_format;
+			rpc_args[i]->resultPP = &resultP;
+			rpc_args[i]->args = &args;
+			rpc_args[i]->counter_mutex = &counter_mutex;
+			rpc_args[i]->counter = &return_counter;
+			rpc_args[i]->serverUrl = va_arg(args, char *);
+			rpc_args[i]->threshold = threshold;
 
-
-	for(i = 0; i < server_num; i++)
-	{
-		rpc_args->serverUrl = servers[i];
-		pthread_create(&threads[i], NULL, (void *)synch_rpc_helper, (void *)rpc_args);
-        /*	synch_rpc_helper(envP, globalClientP, servers[i],
-                                methodName, arg_format, &resultP, args,
-				&counter_mutex, &return_counter);
-	*/
-	}
+			pthread_create(&threads[i], NULL, (void *)synch_rpc_helper, (void *)rpc_args[i]);
+		    /*	synch_rpc_helper(envP, globalClientP, servers[i],
+		                            methodName, arg_format, &resultP, args,
+			&counter_mutex, &return_counter);
+			*/
+		}
 
         va_end(args);
     }
     while(return_counter < threshold)
     {
-	sleep(1);
+		sleep(1);
     }
-
+	
+	printf("return_counter: %d\n", return_counter);
     pthread_mutex_destroy(&counter_mutex);
-    free(rpc_args);
+    
+	int i;
+	for (i = 0; i < serverCount; i++) {	
+		free(rpc_args[i]);
+	}
 
 
     return resultP;
@@ -361,14 +368,14 @@ xmlrpc_client_call_asynch(const char * const methodName,
                           void *       const userData,
                           const char * const format,
 						  xmlrpc_multi_wait_type  wait_type,
-			  			  int  	       const server_num,
+			  			  int  	       const serverCount,
                           ...) {
 
-    char *servers[server_num];
-
+    char *servers[serverCount];
+	printf("format %s\n", format);
     char arg_format[strlen(format)];
     strcpy (arg_format, "(");
-    strcat (arg_format, format + 1 + server_num); //reforms format string
+    strcat (arg_format, format + 1 + serverCount); //reforms format string
 	
     xmlrpc_env env;
 
@@ -379,30 +386,28 @@ xmlrpc_client_call_asynch(const char * const methodName,
     if (!env.fault_occurred) {
         va_list args;
 
-        va_start(args, server_num);
+        va_start(args, serverCount);
 
 		int i;
-		for(i = 0; i < server_num; i++)
+		for(i = 0; i < serverCount; i++)
 		{
 			servers[i] = va_arg(args, char *);
 		}
-		
-	//for(i = 0; i < server_num; i++)
-	//{
-		//to prevent invoking of callback handler, make new function that calls
-		//	callback handler once all the servers have returned
+		printf("server 1: %s\n", servers[0]);
+		printf("server 2: %s\n", servers[1]);
+		printf("server 3: %s\n", servers[2]);
+		printf("methodName: %s\n", methodName);
+		printf("serverCount: %d\n", serverCount);
+		printf("arg_format: %s\n", arg_format);
 
         xmlrpc_client_start_multi_rpcf_va(&env, globalClientP,
                                     servers, methodName,
-									wait_type , server_num,
+									wait_type , serverCount,
                                     responseHandler, userData,
                                     arg_format, args);
 
     	if (env.fault_occurred)
        		(*responseHandler)(servers[0], methodName, NULL, userData, &env, NULL);
-
-
-	//}
 
 		xmlrpc_env_clean(&env);
         va_end(args);

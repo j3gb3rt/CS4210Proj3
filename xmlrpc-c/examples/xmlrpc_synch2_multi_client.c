@@ -9,6 +9,7 @@
 
 #include <stdlib.h>
 #include <stdio.h>
+#include <string.h>
 
 #include <xmlrpc-c/base.h>
 #include <xmlrpc-c/client.h>
@@ -36,15 +37,31 @@ main(int           const argc,
     xmlrpc_env env;
     xmlrpc_value * resultP;
     xmlrpc_int32 sum;
+	xmlrpc_multi_wait_type wait_type;
     const char * const serverUrl = "http://localhost:8080/RPC2";
     const char * const serverUrl2 = "http://localhost:8081/RPC2";
     const char * const serverUrl3 = "http://localhost:8082/RPC2";
     const char * const methodName = "sample.add";
 
-    if (argc-1 > 0) {
-        fprintf(stderr, "This program has no arguments\n");
+    if (argc == 2) {
+        if (strcmp(argv[1], "ANY") == 0) {
+			wait_type = ANY;
+		} else if (strcmp(argv[1], "MAJORITY") == 0) {
+			wait_type = MAJORITY;
+		} else if (strcmp(argv[1], "ALL") == 0) {
+			wait_type = ALL;
+		} else {
+			fprintf(stderr, "This program take 1 argument. This " 
+			"is the number of servers to wait for responses from " 
+			"before returning. Options are: ANY, MAJORITY, and ALL\n");
+       		exit(1);
+		}
+    } else {
+		fprintf(stderr, "This program take 1 argument. This " 
+		"is the number of servers to wait for responses from " 
+		"before returning. Options are: ANY, MAJORITY, and ALL\n");
         exit(1);
-    }
+	}
 
     /* Initialize our error-handling environment. */
     xmlrpc_env_init(&env);
@@ -58,7 +75,7 @@ main(int           const argc,
            "of 5 and 7...\n", methodName);
 
     /* Make the remote procedure call */
-    resultP = xmlrpc_client_call(&env, methodName, "(sssii)", 0, 3, serverUrl, serverUrl2, serverUrl3, 
+    resultP = xmlrpc_client_call(&env, methodName, "(sssii)", wait_type, 3, serverUrl, serverUrl2, serverUrl3, 
 				(xmlrpc_int32) 5, (xmlrpc_int32) 7);
     dieIfFaultOccurred(&env);
     
