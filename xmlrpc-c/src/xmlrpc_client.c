@@ -1048,10 +1048,17 @@ asynchComplete(struct xmlrpc_call_info * const callInfoP,
     }
     //Check for response type
 	//by calling method with counter
+	printf("you made it to asyncComplete");
+	xmlrpc_int32 sum;
+	xmlrpc_read_int(&env, resultP, &sum);
+    printf("The sum is %d\n", sum);
+	
 	if (&(callInfoP->neededRequests) != NULL) {
-		
+		printf("congratz! needed requests exists\n");
+		printf("it's value is %d\n", callInfoP->neededRequests);
 		pthread_mutex_lock(callInfoP->completedRequestsMutex);
 		(*(callInfoP->completedRequests))++;
+		printf("Completed %d\n", *(callInfoP->completedRequests));
 		if (*(callInfoP->completedRequests) >= callInfoP->neededRequests) {
 			pthread_mutex_unlock(callInfoP->completedRequestsMutex);
 			(*callInfoP->completionFn)(callInfoP->completionArgs.serverUrl,
@@ -1069,6 +1076,9 @@ asynchComplete(struct xmlrpc_call_info * const callInfoP,
 		} else {
 			pthread_mutex_unlock(callInfoP->completedRequestsMutex);
 			//do nothing
+			callInfoDestroy(callInfoP);
+
+    		xmlrpc_env_clean(&env);
 		}	
 	}
 	else {	
@@ -1184,7 +1194,8 @@ xmlrpc_client_start_multi_rpc(xmlrpc_env *         const envP,
 							&callInfoP[i]);
 	
     	if (!envP->fault_occurred) {
-        	xmlrpc_traceXml(
+			printf("You've made call info #%d\n", i);        	
+			xmlrpc_traceXml(
             	"XML-RPC CALL",
             	XMLRPC_MEMBLOCK_CONTENTS(char, callInfoP[i]->serialized_xml),
             	XMLRPC_MEMBLOCK_SIZE(char, callInfoP[i]->serialized_xml));
@@ -1195,8 +1206,10 @@ xmlrpc_client_start_multi_rpc(xmlrpc_env *         const envP,
             	&asynchComplete, clientP->progressFn ? &progress : NULL,
             	callInfoP[i]);
     	}
-    	if (envP->fault_occurred)
+    	if (envP->fault_occurred) {
+			printf("fault occurred making call info");
         	callInfoDestroy(callInfoP[i]);
+		}
     	else {
         	/* asynchComplete() will destroy *callInfoP */
     	}
@@ -1261,13 +1274,16 @@ xmlrpc_client_start_multi_rpcf_server_va(
     computeParamArray(envP, format, args, &paramArrayP);
 
     if (!envP->fault_occurred) {
-        xmlrpc_client_start_multi_rpc(envP, clientP,
+        printf("You made it past server multi start\n");
+		xmlrpc_client_start_multi_rpc(envP, clientP,
                                 serverInfoP, methodName, paramArrayP,
                                 wait_type, server_num,
 								responseHandler, userHandle);
 
         xmlrpc_DECREF(paramArrayP);
-    }
+    } else {
+		printf("You gots a fault near line 1250\n");
+	}
 }
 
 
@@ -1314,6 +1330,7 @@ xmlrpc_client_start_multi_rpcf_va(xmlrpc_env *    const envP,
     xmlrpc_server_info * serverInfoP[server_num];
 	bool fault_occurred;
 
+	fault_occurred = false;
     XMLRPC_ASSERT_ENV_OK(envP);
 	int i;
 	for (i = 0; i < server_num; i++) {
@@ -1322,6 +1339,7 @@ xmlrpc_client_start_multi_rpcf_va(xmlrpc_env *    const envP,
 			fault_occurred = true;
 		}
 	}
+	printf("fault?: %d\n", fault_occurred);
     if (!fault_occurred) {
         xmlrpc_client_start_multi_rpcf_server_va(
             envP, clientP,
