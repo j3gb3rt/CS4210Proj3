@@ -46,6 +46,12 @@ struct xmlrpc_client {
     xmlrpc_progress_fn *               progressFn;
 };
 
+struct completed_requests{
+	int counter;
+	bool finished;
+	pthread_mutex_t counterMutex;
+};
+
 
 struct xmlrpc_call_info {
     /* This is all the information needed to finish executing a started
@@ -72,8 +78,8 @@ struct xmlrpc_call_info {
         xmlrpc_value * paramArrayP;
     } completionArgs;
 	int neededRequests;
-	int *completedRequests;
-	pthread_mutex_t *completedRequestsMutex;   
+	int totalRequests;
+  	struct completed_requests *completedRequests;
 	xmlrpc_response_handler * completionFn;
 
 
@@ -896,9 +902,8 @@ callInfoCreateMulti(xmlrpc_env *               const envP,
                xmlrpc_value *             const paramArrayP,
                xmlrpc_dialect             const dialect,
                const char *               const serverUrl,
-			   int *							counter,
 			   int 								serverCount,
-			   pthread_mutex_t *				counterMutex,
+			   struct completed_requests *		completedRequests,
 			   xmlrpc_multi_wait_type		    wait_type,
                xmlrpc_response_handler          completionFn,
                xmlrpc_progress_fn               progressFn,
@@ -935,8 +940,8 @@ callInfoCreateMulti(xmlrpc_env *               const envP,
 			} else {
 				callInfoP->neededRequests = 0;
 			}
-			callInfoP->completedRequests = counter;
-			callInfoP->completedRequestsMutex = counterMutex;
+			callInfoP->totalRequests = serverCount;
+			callInfoP->completedRequests = completedRequests;
 
 			callInfoSetCompletion(envP, callInfoP, serverUrl, methodName,
                                   paramArrayP,
@@ -949,7 +954,24 @@ callInfoCreateMulti(xmlrpc_env *               const envP,
     *callInfoPP = callInfoP;
 }
 
+static void
+callInfoDestroyAll(struct xmlrpc_call_info * const callInfoP) {
 
+    XMLRPC_ASSERT_PTR_OK(callInfoP);
+
+    if (callInfoP->completionFn) {
+        xmlrpc_DECREF(callInfoP->completionArgs.paramArrayP);
+        xmlrpc_strfree(callInfoP->completionArgs.methodName);
+        xmlrpc_strfree(callInfoP->completionArgs.serverUrl);
+    }
+    if (callInfoP->serialized_xml)
+         xmlrpc_mem_block_free(callInfoP->serialized_xml);
+	
+	if (callInfoP->completedRequests != NULL) {
+		free(callInfoP->completedRequests);
+	}
+    free(callInfoP);
+}
 
 static void
 callInfoDestroy(struct xmlrpc_call_info * const callInfoP) {
@@ -963,7 +985,7 @@ callInfoDestroy(struct xmlrpc_call_info * const callInfoP) {
     }
     if (callInfoP->serialized_xml)
          xmlrpc_mem_block_free(callInfoP->serialized_xml);
-
+	
     free(callInfoP);
 }
 
@@ -1046,21 +1068,25 @@ asynchComplete(struct xmlrpc_call_info * const callInfoP,
             }
         }
     }
-    //Check for response type
+    
+	//Check for response type
 	//by calling method with counter
-	printf("you made it to asyncComplete");
 	xmlrpc_int32 sum;
 	xmlrpc_read_int(&env, resultP, &sum);
-    printf("The sum is %d\n", sum);
-	
+    printf("The sum from %s is %d\n",callInfoP->completionArgs.serverUrl, sum);
+
+
 	if (&(callInfoP->neededRequests) != NULL) {
-		printf("congratz! needed requests exists\n");
-		printf("it's value is %d\n", callInfoP->neededRequests);
-		pthread_mutex_lock(callInfoP->completedRequestsMutex);
-		(*(callInfoP->completedRequests))++;
-		printf("Completed %d\n", *(callInfoP->completedRequests));
-		if (*(callInfoP->completedRequests) >= callInfoP->neededRequests) {
-			pthread_mutex_unlock(callInfoP->completedRequestsMutex);
+		int locked;
+		locked = pthread_mutex_lock(&(callInfoP->completedRequests->counterMutex));
+		
+		callInfoP->completedRequests->counter = callInfoP->completedRequests->counter + 1;
+		int completedRequests = callInfoP->completedRequests->counter;
+		locked = pthread_mutex_unlock(&(callInfoP->completedRequests->counterMutex));
+		
+		
+		if (completedRequests == callInfoP->neededRequests){
+			printf("Completed %d Requests\n", completedRequests);
 			(*callInfoP->completionFn)(callInfoP->completionArgs.serverUrl,
                                	   callInfoP->completionArgs.methodName,
                                    callInfoP->completionArgs.paramArrayP,
@@ -1074,9 +1100,12 @@ asynchComplete(struct xmlrpc_call_info * const callInfoP,
 
     		xmlrpc_env_clean(&env);
 		} else {
-			pthread_mutex_unlock(callInfoP->completedRequestsMutex);
 			//do nothing
-			callInfoDestroy(callInfoP);
+			if (completedRequests == callInfoP->totalRequests) {
+				callInfoDestroyAll(callInfoP);
+			} else {
+				callInfoDestroy(callInfoP);
+			}
 
     		xmlrpc_env_clean(&env);
 		}	
@@ -1170,16 +1199,27 @@ xmlrpc_client_start_multi_rpc(xmlrpc_env *         const envP,
                         xmlrpc_response_handler          completionFn,
                         void *                     const userHandle) {
 
-	int counter;	
+	int mutex_failed;	
 	pthread_mutex_t counter_mutex;
 	
-	counter = 0;
-	pthread_mutex_init(&counter_mutex, NULL);
+	mutex_failed = pthread_mutex_init(&counter_mutex, NULL);
+	
+	if (mutex_failed != 0){
+		printf("Mutex failed with error: %d\n", mutex_failed);
+	}
+
+	struct completed_requests *completedRequests = malloc(sizeof(struct completed_requests));
+			
+	completedRequests->counter = 0;
+	completedRequests->finished = false;
+	completedRequests->counterMutex = counter_mutex;
+	
+
 	struct xmlrpc_call_info * callInfoP[server_num];
 
     XMLRPC_ASSERT_ENV_OK(envP);
     XMLRPC_ASSERT_PTR_OK(clientP);
-    XMLRPC_ASSERT_PTR_OK(methodName);
+    XMLRPC_ASSERT_PTR_OK(methodNam error 16e);
     XMLRPC_ASSERT_VALUE_OK(paramArrayP);
 
 	int i;
@@ -1188,10 +1228,11 @@ xmlrpc_client_start_multi_rpc(xmlrpc_env *         const envP,
 
     	callInfoCreateMulti(envP, methodName, paramArrayP, 
 							clientP->dialect, serverInfoP[i]->serverUrl,
-                   			&counter, server_num, &counter_mutex,
+                   			server_num, completedRequests,
 							wait_type, completionFn, 
 							clientP->progressFn, userHandle, 
 							&callInfoP[i]);
+
 	
     	if (!envP->fault_occurred) {
 			printf("You've made call info #%d\n", i);        	
@@ -1230,7 +1271,8 @@ xmlrpc_client_start_rpcf_server_va(
     va_list                    args) {
 
     xmlrpc_value * paramArrayP;
-        /* The XML-RPC parameter list array */
+        /* The XML-RPC parameter list ar32765
+ray */
 
     XMLRPC_ASSERT_ENV_OK(envP);
     XMLRPC_ASSERT_PTR_OK(clientP);
@@ -1339,7 +1381,6 @@ xmlrpc_client_start_multi_rpcf_va(xmlrpc_env *    const envP,
 			fault_occurred = true;
 		}
 	}
-	printf("fault?: %d\n", fault_occurred);
     if (!fault_occurred) {
         xmlrpc_client_start_multi_rpcf_server_va(
             envP, clientP,

@@ -114,7 +114,7 @@ main(int           const argc,
      //                    &clientP);
     //die_if_fault_occurred(&env);
 
-    for (adder = 0; adder < 3; ++adder) {
+    for (adder = 0; adder < 1; ++adder) {
         printf("Making XMLRPC call to server url '%s' method '%s' "
                "to request the sum "
                "of 5 and %d...\n", serverUrl, methodName, adder);
